@@ -1,0 +1,24 @@
+{
+  "TeamId": 1,
+  "TeamName": "game",
+  "SanitizedFolderName": "game",
+  "Members": [
+    {
+      "FirstName": "ali",
+      "LastName": "ahmadi",
+      "PhoneNumber": "09109078493",
+      "DisplayOrder": 1
+    },
+    {
+      "FirstName": "aaa",
+      "LastName": "bbb",
+      "PhoneNumber": "09109078494",
+      "DisplayOrder": 2
+    }
+  ],
+  "SubmittedAt": "2026-01-08T12:38:47.3275137Z",
+  "ArchiveFileName": "game_20260108_123847.rar",
+  "OriginalArchiveFileName": "Test.rar",
+  "ArchiveFileSize": 152,
+  "ArchiveType": ".rar"
+}

@@ -1,0 +1,157 @@
+﻿<!-- wwwroot/index.html -->
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ثبت‌ بازی برای اولین گیم جم هوش مصنوعی ایران - دانشگاه شهید بهشتی">
+    <title>ثبت‌ بازی | SBU AI Game Jam 2025</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="/css/site.css">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="https://gamejam.sbu-ce.ir/assets/GameJamLOGO-BjUG5EN8.png">
+</head>
+<body>
+    <div class="bg-pattern"></div>
+
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <img src="https://gamejam.sbu-ce.ir/assets/GameJamLOGO-BjUG5EN8.png" alt="SBU AI Game Jam Logo" class="logo">
+            <h1>SBU AI Game Jam 2025</h1>
+            <p>اولین گیم جم هوش مصنوعی ایران</p>
+        </header>
+
+        <!-- Main Form -->
+        <main>
+            <form id="registration-form" class="card">
+                <h2 class="card-title">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                        <circle cx="9" cy="7" r="4" />
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                    </svg>
+                    ثبت‌ بازی
+                </h2>
+
+                <!-- Alert Container -->
+                <div id="alert-container"></div>
+
+                <!-- Team Name Section -->
+                <div class="team-name-section">
+                    <div class="form-group">
+                        <label for="team-name" class="form-label required">نام تیم</label>
+                        <input type="text"
+                               id="team-name"
+                               class="form-input"
+                               placeholder="نام تیم خود را وارد کنید"
+                               maxlength="100"
+                               required>
+                    </div>
+                </div>
+
+                <!-- Members Section -->
+                <div class="members-section">
+                    <div class="members-header">
+                        <h3 class="card-title" style="margin-bottom: 0; font-size: 1.25rem;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                                <circle cx="12" cy="7" r="4" />
+                            </svg>
+                            اعضای تیم
+                        </h3>
+                        <span id="members-count" class="members-count">1 از 5</span>
+                    </div>
+
+                    <div id="members-container"></div>
+
+                    <button type="button" id="btn-add-member" class="btn-add-member">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10" />
+                            <path d="M12 8v8M8 12h8" />
+                        </svg>
+                        افزودن عضو جدید
+                    </button>
+                </div>
+
+                <!-- File Upload Section -->
+                <div class="file-upload-section">
+                    <label class="form-label required">آپلود فایل پروژه</label>
+                    <div id="file-drop-area" class="file-upload-area">
+                        <div class="file-upload-icon">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                <polyline points="17 8 12 3 7 8" />
+                                <line x1="12" y1="3" x2="12" y2="15" />
+                            </svg>
+                        </div>
+                        <p class="file-upload-text">فایل ZIP خود را اینجا رها کنید یا کلیک کنید</p>
+                        <p class="file-upload-hint">حداکثر حجم: ۳ گیگابایت | فرمت: ZIP</p>
+                        <input type="file" id="file-input" class="file-input" accept=".zip">
+                    </div>
+
+                    <div id="file-info" class="file-info" style="display: none;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                            <polyline points="14 2 14 8 20 8" />
+                        </svg>
+                        <span id="file-name" class="file-name"></span>
+                        <span id="file-size" class="file-size"></span>
+                        <button type="button" class="file-remove" onclick="form.removeFile()" title="حذف فایل">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M18 6L6 18M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" id="btn-submit" class="btn-submit">
+                    <span class="spinner" style="display: none;"></span>
+                    <span class="btn-text">ثبت‌ بازی</span>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M5 12h14M12 5l7 7-7 7" />
+                    </svg>
+                </button>
+            </form>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>
+                ۹ الی ۱۹ دی ماه ۱۴۰۴ | دانشگاه شهید بهشتی
+                <br>
+                <a href="https://gamejam.sbu-ce.ir/" target="_blank">gamejam.sbu-ce.ir</a>
+            </p>
+        </footer>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="success-modal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-icon">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                    <polyline points="22 4 12 14.01 9 11.01" />
+                </svg>
+            </div>
+            <h2>ثبت‌نام موفق!</h2>
+            <p>تیم <strong id="modal-team-name"></strong> با موفقیت ثبت شد.</p>
+            <button type="button" class="btn-modal" onclick="form.closeModal()">
+                متوجه شدم
+            </button>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/js/site.js"></script>
+</body>
+</html>
