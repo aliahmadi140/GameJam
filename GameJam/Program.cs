@@ -1,10 +1,22 @@
-// Program.cs
+﻿// Program.cs
 using GameJam.Repositories;
 using GameJam.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Http.Features;
 using SBUGameJam.Data;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// ✅ Configure Kestrel for Docker and large files
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.ListenAnyIP(8080); // Listen on port 8080 for Docker
+    options.Limits.MaxRequestBodySize = 3L * 1024 * 1024 * 1024; // 3GB
+    options.Limits.RequestHeadersTimeout = TimeSpan.FromMinutes(30);
+    options.Limits.KeepAliveTimeout = TimeSpan.FromMinutes(30);
+    options.Limits.MinRequestBodyDataRate = null; // Disable rate limit for large uploads
+    options.Limits.MinResponseDataRate = null;
+});
 
 // Add DbContext
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -13,9 +25,10 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
         sqlOptions =>
         {
             sqlOptions.EnableRetryOnFailure(
-                maxRetryCount: 3,
-                maxRetryDelay: TimeSpan.FromSeconds(10),
+                maxRetryCount: 5, // ✅ افزایش retry برای Docker
+                maxRetryDelay: TimeSpan.FromSeconds(30),
                 errorNumbersToAdd: null);
+            sqlOptions.CommandTimeout(300); // ✅ 5 دقیقه timeout برای عملیات سنگین
         }));
 
 // Add repositories
@@ -29,31 +42,50 @@ builder.Services.AddScoped<IArchiveService, ArchiveService>();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
-// Configure request size limits
-//builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
-//{
-//    options.MultipartBodyLengthLimit = 100 * 1024 * 1024; // 100MB
-//});
-
-//builder.WebHost.ConfigureKestrel(options =>
-//{
-//    options.Limits.MaxRequestBodySize = 100 * 1024 * 1024; // 100MB
-//});
+// ✅ Configure FormOptions for large files
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 3L * 1024 * 1024 * 1024; // 3GB
+    options.ValueLengthLimit = int.MaxValue;
+    options.MultipartHeadersLengthLimit = int.MaxValue;
+    options.BufferBodyLengthLimit = 3L * 1024 * 1024 * 1024;
+});
 
 var app = builder.Build();
 
-// Apply migrations automatically (for development)
+// ✅ Apply migrations with retry logic for Docker
 using (var scope = app.Services.CreateScope())
 {
-    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    try
+    var services = scope.ServiceProvider;
+    var logger = services.GetRequiredService<ILogger<Program>>();
+    var db = services.GetRequiredService<ApplicationDbContext>();
+
+    var retryCount = 0;
+    var maxRetries = 10;
+    var delay = TimeSpan.FromSeconds(5);
+
+    while (retryCount < maxRetries)
     {
-        db.Database.Migrate();
-    }
-    catch (Exception ex)
-    {
-        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred while migrating the database.");
+        try
+        {
+            logger.LogInformation("Attempting to migrate database (attempt {RetryCount}/{MaxRetries})...",
+                retryCount + 1, maxRetries);
+            db.Database.Migrate();
+            logger.LogInformation("Database migration completed successfully.");
+            break;
+        }
+        catch (Exception ex)
+        {
+            retryCount++;
+            if (retryCount >= maxRetries)
+            {
+                logger.LogError(ex, "Failed to migrate database after {MaxRetries} attempts.", maxRetries);
+                throw;
+            }
+            logger.LogWarning(ex, "Database migration failed. Retrying in {Delay} seconds...",
+                delay.TotalSeconds);
+            Thread.Sleep(delay);
+        }
     }
 }
 
@@ -67,7 +99,9 @@ app.Use(async (context, next) =>
     await next();
 });
 
-app.UseHttpsRedirection();
+// ✅ حذف HTTPS redirection برای Docker (Nginx این کار رو انجام میده)
+// app.UseHttpsRedirection();
+
 app.UseStaticFiles();
 app.UseRouting();
 app.MapControllers();

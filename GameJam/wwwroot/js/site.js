@@ -247,11 +247,11 @@ class TeamRegistrationForm {
         }
 
         // Validate file size (100MB)
-        const maxSize = 100 * 1024 * 1024;
-        if (file.size > maxSize) {
-            this.showAlert('error', 'حجم فایل زیاد است', ['حداکثر حجم فایل ۱۰۰ مگابایت است']);
-            return;
-        }
+        //const maxSize = 100 * 1024 * 1024;
+        //if (file.size > maxSize) {
+        //    this.showAlert('error', 'حجم فایل زیاد است', ['حداکثر حجم فایل ۱۰۰ مگابایت است']);
+        //    return;
+        //}
 
         this.selectedFile = file;
         dropArea.classList.add('has-file');
@@ -315,17 +315,14 @@ class TeamRegistrationForm {
         const btnText = submitBtn.querySelector('.btn-text');
         const btnSpinner = submitBtn.querySelector('.spinner');
 
-        // Clear previous alerts
         this.hideAlert();
 
-        // Client-side validation
         const errors = this.validate();
         if (errors.length > 0) {
             this.showAlert('error', 'لطفاً خطاهای زیر را برطرف کنید', errors);
             return;
         }
 
-        // Show loading state
         submitBtn.disabled = true;
         btnText.textContent = 'در حال ارسال...';
         btnSpinner.style.display = 'block';
@@ -342,9 +339,9 @@ class TeamRegistrationForm {
             formData.append('teamData', JSON.stringify(teamData));
             formData.append('archiveFile', this.selectedFile);
 
-            const response = await fetch('/api/registration/submit', {
-                method: 'POST',
-                body: formData
+            // ✅ استفاده از XMLHttpRequest برای نمایش پیشرفت
+            const response = await this.uploadWithProgress(formData, (progress) => {
+                btnText.textContent = `در حال ارسال... ${progress}%`;
             });
 
             const result = await response.json();
@@ -363,6 +360,36 @@ class TeamRegistrationForm {
             btnText.textContent = 'ثبت‌نام تیم';
             btnSpinner.style.display = 'none';
         }
+    }
+
+    uploadWithProgress(formData, onProgress) {
+        return new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+
+            xhr.upload.addEventListener('progress', (e) => {
+                if (e.lengthComputable) {
+                    const percentComplete = Math.round((e.loaded / e.total) * 100);
+                    onProgress(percentComplete);
+                }
+            });
+
+            xhr.addEventListener('load', () => {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    resolve({
+                        json: () => Promise.resolve(JSON.parse(xhr.responseText)),
+                        status: xhr.status
+                    });
+                } else {
+                    reject(new Error(`HTTP ${xhr.status}`));
+                }
+            });
+
+            xhr.addEventListener('error', () => reject(new Error('Network error')));
+            xhr.addEventListener('abort', () => reject(new Error('Upload aborted')));
+
+            xhr.open('POST', '/api/registration/submit');
+            xhr.send(formData);
+        });
     }
 
     validate() {
